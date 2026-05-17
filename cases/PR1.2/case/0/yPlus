@@ -1,0 +1,148 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  13
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    format      ascii;
+    class       volScalarField;
+    location    "0";
+    object      yPlus;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dimensions      [];
+
+internalField   uniform 0;
+
+boundaryField
+{
+    engineInlet
+    {
+        type            calculated;
+        value           uniform 0;
+    }
+    freestreamInlet
+    {
+        type            calculated;
+        value           uniform 0;
+    }
+    outlet
+    {
+        type            calculated;
+        value           uniform 0;
+    }
+    internalNozzleWall
+    {
+        type            calculated;
+        value           nonuniform List<scalar> 
+38
+(
+185.024
+185.024
+185.024
+185.024
+185.024
+185.024
+185.024
+185.024
+185.024
+185.024
+185.024
+185.024
+185.024
+185.024
+185.024
+185.024
+185.024
+185.024
+185.024
+185.024
+185.024
+185.024
+185.024
+185.024
+185.024
+185.024
+185.024
+185.024
+182.535
+181.563
+180.587
+179.605
+178.618
+177.625
+176.627
+175.623
+174.614
+173.598
+)
+;
+    }
+    externalNozzleWall
+    {
+        type            calculated;
+        value           nonuniform List<scalar> 
+38
+(
+773.342
+773.342
+773.342
+773.342
+773.342
+773.342
+773.342
+773.342
+773.342
+773.342
+773.342
+773.342
+773.342
+773.342
+773.342
+773.342
+773.342
+773.342
+773.342
+773.342
+773.342
+773.342
+773.342
+773.342
+773.342
+773.342
+773.342
+773.342
+768.142
+768.248
+768.355
+768.461
+768.567
+768.673
+768.779
+768.885
+768.991
+769.098
+)
+;
+    }
+    topSlip
+    {
+        type            calculated;
+        value           uniform 0;
+    }
+    axis
+    {
+        type            symmetryPlane;
+    }
+    frontAndBack
+    {
+        type            empty;
+    }
+}
+
+
+// ************************************************************************* //

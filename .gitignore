@@ -1,0 +1,18 @@
+__pycache__/
+*.pyc
+
+# OpenFOAM solver outputs and logs
+case/postProcessing/
+case/dynamicCode/
+case/visualization.foam
+case/log.*
+case/[1-9]*/
+case/0.[0-9]*/
+
+cases/*/case/postProcessing/
+cases/*/case/dynamicCode/
+cases/*/case/visualization.foam
+cases/*/case/log.*
+cases/*/case/[1-9]*/
+cases/*/case/0.[0-9]*/
+cases/*/logs/

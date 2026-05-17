@@ -1,0 +1,157 @@
+libs ("libutilityFunctionObjects.so");
+
+#includeFunc wallShearStress
+#includeFunc yPlus
+
+thrustBalance
+{
+    type            coded;
+    libs            ("libutilityFunctionObjects.so");
+    writeControl    writeTime;
+
+codeInclude
+#{
+    #include "volFields.H"
+    #include "surfaceFields.H"
+    #include "OFstream.H"
+    #include "OSspecific.H"
+    #include "mathematicalConstants.H"
+#};
+
+    codeData
+    #{
+        autoPtr<OFstream> file;
+    #};
+
+    codeRead
+    #{
+        fileName dir
+        (
+            mesh().time().globalPath()/
+            "postProcessing"/
+            mesh().time().name()/
+            name()
+        );
+
+        mkDir(dir);
+        file = new OFstream(dir/"data");
+
+    file()
+        << "#step"
+        << tab << "time"
+        << tab << "mdot360"
+        << tab << "FmomInletX360"
+        << tab << "FpInletGaugeX360"
+        << tab << "FpWallX360"
+        << tab << "FshearWallX360"
+        << tab << "T_CFD360"
+        << tab << "T_ideal360"
+        << tab << "Cfg"
+        << endl;
+    #};
+
+    codeFields
+    #{
+        fields.append("U");
+        fields.append("p");
+        fields.append("phi");
+        fields.append("wallShearStress");
+    #};
+
+    codeWrite
+    #{
+        // Current portfolio case constants. These match the inlet BC values.
+        const scalar gamma = 1.4;
+        const scalar pAmb = 101352.93;
+        const scalar p0Engine = 182435.2740000000;
+        const scalar T0Engine = 833.33;
+        const scalar Cp = 1005.0;
+        const scalar R = Cp*(gamma - 1.0)/gamma;
+        const scalar PR = p0Engine/pAmb;
+
+        const volVectorField& U = mesh().lookupObject<volVectorField>("U");
+        const volScalarField& p = mesh().lookupObject<volScalarField>("p");
+        const surfaceScalarField& phi =
+            mesh().lookupObject<surfaceScalarField>("phi");
+        const volVectorField& wallShearStress =
+            mesh().lookupObject<volVectorField>("wallShearStress");
+
+        const label inletPatchi =
+            mesh().boundaryMesh().findIndex("engineInlet");
+        const label wallPatchi =
+            mesh().boundaryMesh().findIndex("internalNozzleWall");
+
+        if (inletPatchi < 0 || wallPatchi < 0)
+        {
+            FatalErrorInFunction
+                << "Unable to find engineInlet or internalNozzleWall patch"
+                << exit(FatalError);
+        }
+
+        const scalarField& pIn = p.boundaryField()[inletPatchi];
+        const vectorField& UIn = U.boundaryField()[inletPatchi];
+        const scalarField& phiIn = phi.boundaryField()[inletPatchi];
+        const vectorField& SfIn = mesh().Sf().boundaryField()[inletPatchi];
+
+        const scalarField& pWall = p.boundaryField()[wallPatchi];
+        const vectorField& tauWall =
+            wallShearStress.boundaryField()[wallPatchi];
+        const vectorField& SfWall = mesh().Sf().boundaryField()[wallPatchi];
+        const scalarField& magSfWall = mesh().magSf().boundaryField()[wallPatchi];
+        const vectorField& CfIn = mesh().Cf().boundaryField()[inletPatchi];
+        const vectorField& CfWall = mesh().Cf().boundaryField()[wallPatchi];
+        const scalarField wIn =
+            constant::mathematical::twoPi*CfIn.component(vector::Y);
+        const scalarField wWall =
+            constant::mathematical::twoPi*CfWall.component(vector::Y);
+
+        const scalar FmomInletX =
+            -gSum(phiIn * UIn.component(vector::X) * wIn);
+
+        const scalar FpInletX =
+            gSum(-(pIn - pAmb) * SfIn.component(vector::X) * wIn);
+
+        const scalar FpWallX =
+            gSum(-(pWall - pAmb) * SfWall.component(vector::X) * wWall);
+
+        const scalar FshearWallX =
+            gSum(tauWall.component(vector::X) * magSfWall * wWall);
+
+        const scalar T_CFD =
+            FmomInletX + FpInletX + FpWallX + FshearWallX;
+
+        const scalar mdot360 = -gSum(phiIn * wIn);
+
+        const scalar Mideal =
+            sqrt
+            (
+                2.0/(gamma - 1.0)
+               *(
+                    pow(PR, (gamma - 1.0)/gamma)
+                  - 1.0
+                )
+            );
+
+        const scalar TRideal = pow(PR, (gamma - 1.0)/gamma);
+        const scalar TsIdeal = T0Engine/TRideal;
+        const scalar aIdeal = sqrt(gamma*R*TsIdeal);
+        const scalar Uideal = Mideal*aIdeal;
+        const scalar T_ideal = mdot360*Uideal;
+        const scalar Cfg = (mag(T_ideal) > VSMALL ? T_CFD/T_ideal : 0.0);
+
+        file()
+            << mesh().time().timeIndex()
+            << tab << mesh().time().userTimeValue()
+            << tab << mdot360
+            << tab << FmomInletX
+            << tab << FpInletX
+            << tab << FpWallX
+            << tab << FshearWallX
+            << tab << T_CFD
+            << tab << T_ideal
+            << tab << Cfg
+            << endl;
+    #};
+}
+
+// ************************************************************************* //
