@@ -39,6 +39,12 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--label", default="PR2.0")
     parser.add_argument(
+        "--case-dir",
+        type=Path,
+        default=Path("/home/ads-user/openfoam/openfoam-axisymmetric-nozzle-portfolio/case"),
+    )
+    parser.add_argument("--vmax", type=float)
+    parser.add_argument(
         "--output-dir",
         type=Path,
         default=Path("/home/ads-user/openfoam/openfoam-axisymmetric-nozzle-portfolio/images"),
@@ -46,7 +52,7 @@ def main() -> None:
     args = parser.parse_args()
 
     repo = Path(__file__).resolve().parents[1]
-    case_dir = repo / "case"
+    case_dir = args.case_dir if args.case_dir.is_absolute() else repo / args.case_dir
     out_dir = args.output_dir
     out_dir.mkdir(parents=True, exist_ok=True)
     run_label = args.label
@@ -58,17 +64,27 @@ def main() -> None:
 
     U = np.asarray(grid.cell_data["U"])
     T = np.asarray(grid.cell_data["T"])
-    speed = np.linalg.norm(U, axis=1)
-
     gamma = 1.4
     R = 287.0
-    mach = speed / np.sqrt(gamma * R * T)
+    speed_of_sound = np.sqrt(np.maximum(gamma * R * T, 1e-12))
+    mach = np.linalg.norm(U[:, :2], axis=1) / speed_of_sound
     finite = np.isfinite(x) & np.isfinite(y) & np.isfinite(mach)
     x = x[finite]
     y = y[finite]
     mach = mach[finite]
 
-    levels = np.linspace(0.0, max(0.5, float(np.nanmax(mach))), 28)
+    if args.vmax is not None:
+        vmax = float(args.vmax)
+        vmin = float(np.nanmin(mach))
+    else:
+        vmin = float(np.nanpercentile(mach, 1.0))
+        vmax = float(np.nanpercentile(mach, 99.0))
+        if not np.isfinite(vmin) or not np.isfinite(vmax) or vmax <= vmin:
+            vmin = float(np.nanmin(mach))
+            vmax = float(np.nanmax(mach))
+        if vmax <= vmin:
+            vmax = vmin + 1.0
+    levels = np.linspace(vmin, vmax, 28)
 
     # Domain outline and nozzle wall sketch for orientation.
     x0, x1, x2, x3 = 0.0, 10.0, 12.0, 480.0
@@ -77,11 +93,11 @@ def main() -> None:
     def render(out_path: Path, xlim: tuple[float, float], ylim: tuple[float, float], title: str) -> None:
         fig, ax = plt.subplots(figsize=(13.5, 7.0), constrained_layout=True)
         ax.set_facecolor("#f7f7f5")
-        contour = ax.tricontourf(x, y, mach, levels=levels, cmap="turbo", extend="max")
+        contour = ax.tricontourf(x, y, mach, levels=levels, cmap="turbo", extend="both")
         ax.tricontour(x, y, mach, levels=levels[::2], colors="k", linewidths=0.35, alpha=0.3)
 
         cbar = fig.colorbar(contour, ax=ax, pad=0.015)
-        cbar.set_label("Mach number", rotation=90)
+        cbar.set_label("Mach", rotation=90)
 
         ax.plot([x0, x3, x3, x0, x0], [y0, y0, y3, y3, y0], color="#111111", lw=1.0, alpha=0.5)
         ax.plot([x0, x1, x2], [y1, y1, y2], color="#111111", lw=2.0)

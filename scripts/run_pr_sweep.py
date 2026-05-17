@@ -43,6 +43,17 @@ def replace_uniform_value(path: Path, key: str, value: float) -> None:
     path.write_text(new_text)
 
 
+def replace_uniform_vector(path: Path, key: str, value: tuple[float, float, float]) -> None:
+    text = path.read_text()
+    vector_text = f"({value[0]:.10f} {value[1]:.10f} {value[2]:.10f})"
+    pattern = rf"(^\s*{re.escape(key)}\s+uniform\s+)(\([^)]+\))(\s*;)"
+    replacement = rf"\g<1>{vector_text}\3"
+    new_text, count = re.subn(pattern, replacement, text, flags=re.MULTILINE)
+    if count != 1:
+        raise RuntimeError(f"Expected one replacement for {key} in {path}, found {count}")
+    path.write_text(new_text)
+
+
 def clone_case(run_case_dir: Path) -> None:
     if run_case_dir.exists():
         shutil.rmtree(run_case_dir)
@@ -64,6 +75,7 @@ def clone_case(run_case_dir: Path) -> None:
 
 def set_pr(run_case_dir: Path, pr: float) -> None:
     p0 = P_AMB * pr
+    replace_uniform_vector(run_case_dir / "0" / "U", "internalField", (17.013, 0.0, 0.0))
     replace_uniform_value(run_case_dir / "0" / "p", "p0", p0)
     replace_scalar(run_case_dir / "system" / "thrustBalance", "p0Engine", p0)
     replace_scalar(run_case_dir / "system" / "functions", "p0Engine", p0)
@@ -130,6 +142,8 @@ def run_one(pr: float, end_time: float) -> None:
             str(REPO_DIR / "scripts" / "render_mach.py"),
             "--label",
             label,
+            "--case-dir",
+            str(run_case),
             "--output-dir",
             str(archive_images),
         ],
@@ -149,7 +163,7 @@ def run_one(pr: float, end_time: float) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--end-time", type=float, default=0.01)
-    parser.add_argument("--prs", type=float, nargs="+", default=[1.2, 1.5, 1.8, 2.2, 3.0])
+    parser.add_argument("--prs", type=float, nargs="+", default=[1.5, 1.8, 2.2, 3.0])
     args = parser.parse_args()
 
     CASES_DIR.mkdir(parents=True, exist_ok=True)

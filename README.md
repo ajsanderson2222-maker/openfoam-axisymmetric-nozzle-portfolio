@@ -171,7 +171,6 @@ For the baseline case, the useful takeaway was that the flow field could be marc
 
 The NPR sweep cases are stored independently under:
 
-- `cases/PR1.2`
 - `cases/PR1.5`
 - `cases/PR1.8`
 - `cases/PR2.2`
@@ -183,14 +182,6 @@ Each archive contains:
 - `data/` - the thrust balance CSV,
 - `images/` - the Mach contours and thrust convergence plot,
 - `logs/` - the solver log.
-
-### PR1.2
-
-![PR1.2 Mach contours](cases/PR1.2/images/mach_contours_PR1.2.png)
-
-![PR1.2 Mach zoom](cases/PR1.2/images/mach_contours_zoom_PR1.2.png)
-
-![PR1.2 thrust convergence](cases/PR1.2/images/thrust_convergence_PR1.2.png)
 
 ### PR1.5
 
@@ -236,11 +227,10 @@ Summary data:
 
 Observed averaged `Cfg` values:
 
-- `PR1.2`: `1.087414`
-- `PR1.5`: `0.989556`
-- `PR1.8`: `0.971852`
-- `PR2.2`: `0.961737`
-- `PR3.0`: `0.947373`
+- `PR1.5`: `0.963637`
+- `PR1.8`: `0.960421`
+- `PR2.2`: `0.958172`
+- `PR3.0`: `0.946950`
 
 The trend is the useful portfolio result:
 
@@ -336,4 +326,3 @@ If you are trying to understand the project quickly, start with:
 2. [`images/axi_nozzle_mesh.png`](images/axi_nozzle_mesh.png)
 3. [`cases/summary/cfg_vs_npr.png`](cases/summary/cfg_vs_npr.png)
 4. one of the NPR run folders, for example [`cases/PR2.2`](cases/PR2.2)
-
