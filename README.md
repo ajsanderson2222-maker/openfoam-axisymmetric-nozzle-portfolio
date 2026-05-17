@@ -238,6 +238,28 @@ The trend is the useful portfolio result:
 - the higher NPR cases settle below 1,
 - the coefficient decreases gradually as NPR rises.
 
+### Why `Cfg` Decreases With NPR
+
+That downward trend is expected for a purely convergent nozzle once the flow is at or above the critical pressure ratio.
+
+The short version is:
+
+- below the critical NPR, the nozzle is unchoked and the exhaust velocity can still respond strongly to higher stagnation pressure,
+- at and above the critical NPR, the minimum-area section chokes and the exit Mach is pinned near sonic,
+- further increases in NPR cannot be turned into proportionally higher nozzle exit velocity inside the convergent geometry.
+
+In this case that means:
+
+- `T_CFD` begins to saturate because the nozzle has reached its sonic limit,
+- `T_ideal` continues to rise because the ideal reference still assumes the extra stagnation pressure can be converted into ideal exhaust velocity,
+- the ratio `Cfg = T_CFD / T_ideal` therefore drifts downward as NPR increases.
+
+This is why the sweep is still useful even though the nozzle is simple:
+
+- it shows the transition from unchoked to choked behavior,
+- it highlights the limit of a purely convergent nozzle,
+- and it provides a clean baseline for later comparison against a convergent-divergent design.
+
 ## Run Organization
 
 The repository now keeps the active template separate from the archived runs.
